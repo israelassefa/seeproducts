@@ -1,24 +1,3 @@
-import os
-from flask import Flask, render_template_string
-from flask_sqlalchemy import SQLAlchemy
-
-app = Flask(__name__)
-# Uses a local SQLite database file named 'mobileshop.db'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mobileshop.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-
-# Database Model for our Phones
-class Mobile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    brand = db.Column(db.String(50), nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    image_url = db.Column(db.String(300))
-    description = db.Column(db.String(200))
-
-# HTML Template with styling embedded (Clean Bootstrap 5 look)
-HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,64 +16,65 @@ HTML_TEMPLATE = """
 </head>
 <body>
 
-    <!-- Navigation Header -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="#">📱 ESRAEL MOBILES</a>
-            <span class="navbar-text text-white-50">Secure E-Commerce Platform</span>
+            <span class="navbar-text text-white-50">Static GitHub Shop Demonstration</span>
         </div>
     </nav>
 
-    <!-- Main Content Area -->
     <div class="container my-5">
         <h2 class="text-center mb-4">Latest Smartphones Available</h2>
-        <div class="row g-4">
-            {% for mobile in mobiles %}
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <img src="{{ mobile.image_url }}" class="card-img-top p-3" alt="{{ mobile.name }}" style="max-height: 250px; object-fit: contain;">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ mobile.name }}</h5>
-                        <p class="text-muted small mb-1">Brand: {{ mobile.brand }}</p>
-                        <p class="card-text text-secondary flex-grow-1">{{ mobile.description }}</p>
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <span class="fs-4 fw-bold text-dark">${{ mobile.price }}</span>
-                            <button class="btn btn-buy px-4" onclick="alert('Order placed for {{ mobile.name }}!')">Buy Now</button>
+        <div class="row g-4" id="product-container">
+            </div>
+    </div>
+
+    <script>
+        // Simulating the Python database directly inside the browser storage environment
+        const mobiles = [
+            {
+                name: "iPhone 15 Pro",
+                brand: "Apple",
+                price: 999.00,
+                image_url: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=300&q=80",
+                description: "Titanium design, A17 Pro chip, customizable Action button, and a powerful camera system."
+            },
+            {
+                name: "Galaxy S24 Ultra",
+                brand: "Samsung",
+                price: 1199.99,
+                image_url: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=300&q=80",
+                description: "Built-in S Pen, advanced Galaxy AI integration, 200MP camera lens, and ultra-durable frame."
+            },
+            {
+                name: "Pixel 8 Pro",
+                brand: "Google",
+                price: 799.00,
+                image_url: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=300&q=80",
+                description: "Pure Android experience, Tensor G3 chip, advanced computational AI photography tools."
+            }
+        ];
+
+        const container = document.getElementById('product-container');
+        
+        mobiles.forEach(mobile => {
+            container.innerHTML += `
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <img src="${mobile.image_url}" class="card-img-top p-3" alt="${mobile.name}" style="max-height: 250px; object-fit: contain;">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">${mobile.name}</h5>
+                            <p class="text-muted small mb-1">Brand: ${mobile.brand}</p>
+                            <p class="card-text text-secondary flex-grow-1">${mobile.description}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="fs-4 fw-bold text-dark">$${mobile.price.toFixed(2)}</span>
+                                <button class="btn btn-buy px-4" onclick="alert('Order request simulation completed for ${mobile.name}!')">Buy Now</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
+            `;
+        });
+    </script>
 </body>
 </html>
-"""
-
-@app.route('/')
-def home():
-    # Pull all phones dynamically out of the SQLite Database
-    mobiles = Mobile.query.all()
-    return render_template_string(HTML_TEMPLATE, mobiles=mobiles)
-
-if __name__ == '__main__':
-    # Automatically initialize the database and populate default values if empty
-    with app.app_context():
-        db.create_all()
-        if not Mobile.query.first():
-            sample_stock = [
-                Mobile(name="iPhone 15 Pro", brand="Apple", price=999.00, 
-                       image_url="https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=300&q=80", 
-                       description="Titanium design, A17 Pro chip, customizable Action button, and a powerful camera system."),
-                Mobile(name="Galaxy S24 Ultra", brand="Samsung", price=1199.99, 
-                       image_url="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=300&q=80", 
-                       description="Built-in S Pen, advanced Galaxy AI integration, 200MP camera lens, and ultra-durable frame."),
-                Mobile(name="Pixel 8 Pro", brand="Google", price=799.00, 
-                       image_url="https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=300&q=80", 
-                       description="Pure Android experience, Tensor G3 chip, advanced computational AI photography tools.")
-            ]
-            db.session.bulk_save_objects(sample_stock)
-            db.session.commit()
-            
-    app.run(debug=True)
